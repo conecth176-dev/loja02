@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  discordId     String         @unique
+  username      String         @default("")
+  discriminator String         @default("")
+  avatar        String?
+  createdAt     DateTime       @default(now())
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  productName String
+  price       String
+  createdAt   DateTime @default(now())
+  status      String   @default("active")
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Coupon {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  discount  String
+  expiresAt DateTime
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}

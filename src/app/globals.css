@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --color-discord-purple: #5865F2;
+  --color-discord-purple-hover: #4752c4;
+  --color-dark-bg: #09090B;
+  --color-card-bg: rgba(24, 24, 27, 0.7);
+  --color-card-border: rgba(39, 39, 42, 0.8);
+  --font-sans: 'Inter', sans-serif;
+  
+  --radius-custom: 18px;
+}
+
+:root {
+  --background: #09090B;
+  --foreground: #F4F4F5;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom premium scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #09090B;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272A;
+  border-radius: 9999px;
+  border: 2px solid #09090B;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3F3F46;
+}
+
+/* Premium utility classes */
+.glow-purple {
+  box-shadow: 0 0 50px -12px rgba(88, 101, 242, 0.25);
+}
+
+.glow-card:hover {
+  box-shadow: 0 0 30px -5px rgba(88, 101, 242, 0.15);
+  border-color: rgba(88, 101, 242, 0.4);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #FFFFFF 30%, #A1A1AA 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-purple-gradient {
+  background: linear-gradient(135deg, #A5B4FC 0%, #5865F2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glassmorphism {
+  background: rgba(15, 15, 20, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glassmorphism-nav {
+  background: rgba(9, 9, 11, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+::selection {
+  background-color: rgba(88, 101, 242, 0.3);
+  color: #FFFFFF;
+}
