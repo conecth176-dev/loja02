@@ -32,6 +32,8 @@ model Coupon {
   code      String   @unique
   discount  String
   expiresAt DateTime
+  maxUses   Int?
+  usedCount Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 }
