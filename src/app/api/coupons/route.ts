@@ -11,10 +11,12 @@ export async function GET() {
     const now = new Date();
     const formattedCoupons = coupons.map(coupon => {
       const isExpired = new Date(coupon.expiresAt) < now;
+      const isExhausted = coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses;
       return {
         ...coupon,
         isExpired,
-        status: coupon.isActive && !isExpired ? 'active' : 'expired',
+        isExhausted,
+        status: coupon.isActive && !isExpired && !isExhausted ? 'active' : 'expired',
       };
     });
 
@@ -28,7 +30,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { code, discount, durationHours } = body;
+    const { code, discount, durationHours, maxUses } = body;
 
     if (!code || typeof code !== 'string' || code.trim() === '') {
       return NextResponse.json({ error: 'Nome/Código do cupom é obrigatório.' }, { status: 400 });
@@ -41,6 +43,15 @@ export async function POST(request: Request) {
     const hours = Number(durationHours);
     if (isNaN(hours) || hours <= 0) {
       return NextResponse.json({ error: 'Tempo ativo inválido.' }, { status: 400 });
+    }
+
+    // Empty/null means unlimited uses
+    let usesLimit: number | null = null;
+    if (maxUses !== undefined && maxUses !== null && maxUses !== '') {
+      usesLimit = Number(maxUses);
+      if (!Number.isInteger(usesLimit) || usesLimit <= 0) {
+        return NextResponse.json({ error: 'Quantidade de usos inválida.' }, { status: 400 });
+      }
     }
 
     const cleanCode = code.trim().toUpperCase();
@@ -61,6 +72,7 @@ export async function POST(request: Request) {
         code: cleanCode,
         discount: discount.trim(),
         expiresAt,
+        maxUses: usesLimit,
       },
     });
 

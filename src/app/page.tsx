@@ -15,7 +15,8 @@ import {
   Calendar,
   Loader2,
   Lock,
-  Moon
+  Moon,
+  Users
 } from 'lucide-react';
 
 interface Coupon {
@@ -23,9 +24,12 @@ interface Coupon {
   code: string;
   discount: string;
   expiresAt: string;
+  maxUses: number | null;
+  usedCount: number;
   isActive: boolean;
   createdAt: string;
   isExpired?: boolean;
+  isExhausted?: boolean;
   status?: 'active' | 'expired';
 }
 
@@ -38,6 +42,7 @@ export default function CouponManager() {
   const [discount, setDiscount] = useState('');
   const [durationValue, setDurationValue] = useState('24');
   const [durationUnit, setDurationUnit] = useState('hours'); // 'hours' or 'days'
+  const [maxUses, setMaxUses] = useState(''); // empty = unlimited
   
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -91,6 +96,14 @@ export default function CouponManager() {
       return;
     }
 
+    if (maxUses.trim() !== '') {
+      const uses = Number(maxUses);
+      if (!Number.isInteger(uses) || uses <= 0) {
+        setErrorMessage('A quantidade de usos deve ser um número inteiro maior que zero.');
+        return;
+      }
+    }
+
     // Convert days to hours
     const durationHours = durationUnit === 'days' ? value * 24 : value;
 
@@ -105,6 +118,7 @@ export default function CouponManager() {
           code: code.trim(),
           discount: discount.trim(),
           durationHours,
+          maxUses: maxUses.trim() === '' ? null : Number(maxUses),
         }),
       });
 
@@ -115,6 +129,7 @@ export default function CouponManager() {
         setDiscount('');
         setDurationValue('24');
         setDurationUnit('hours');
+        setMaxUses('');
         setSuccessMessage(`Cupom "${data.code}" criado com sucesso!`);
         fetchCoupons(); // Refresh the list
       } else {
@@ -176,7 +191,7 @@ export default function CouponManager() {
   // Calculate metrics
   const now = new Date();
   const totalCoupons = coupons.length;
-  const activeCoupons = coupons.filter(c => new Date(c.expiresAt) > now).length;
+  const activeCoupons = coupons.filter(c => new Date(c.expiresAt) > now && (c.maxUses === null || c.usedCount < c.maxUses)).length;
   const expiredCoupons = totalCoupons - activeCoupons;
 
   return (
@@ -301,6 +316,25 @@ export default function CouponManager() {
                 </div>
               </div>
 
+              {/* Quantidade de usos */}
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Quantidade de Usos</label>
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    min="1"
+                    step="1"
+                    value={maxUses}
+                    onChange={(e) => setMaxUses(e.target.value)}
+                    placeholder="Deixe vazio para ilimitado"
+                    className="w-full bg-zinc-950/80 border border-white/5 focus:border-discord-purple/60 focus:ring-1 focus:ring-discord-purple/60 rounded-xl pl-11 pr-4 py-3 text-sm text-white font-bold placeholder:font-normal focus:outline-none transition-all"
+                  />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">
+                    <Users className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+
               {/* Messages */}
               <AnimatePresence mode="wait">
                 {errorMessage && (
@@ -384,7 +418,8 @@ export default function CouponManager() {
             /* Coupons Grid */
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {coupons.map((coupon) => {
-                const expired = new Date(coupon.expiresAt) < now;
+                const exhausted = coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses;
+                const expired = new Date(coupon.expiresAt) < now || exhausted;
                 const remainingText = getRemainingTimeText(coupon.expiresAt);
                 
                 return (
@@ -438,7 +473,7 @@ export default function CouponManager() {
                       <div className="flex items-center gap-2 text-xs font-medium">
                         {expired ? (
                           <span className="flex items-center gap-1 text-red-400 bg-red-400/5 px-2.5 py-1 rounded-full border border-red-400/15 uppercase font-bold text-[10px] tracking-wider">
-                            Expirado
+                            {exhausted ? 'Esgotado' : 'Expirado'}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1.5 text-zinc-400">
@@ -446,6 +481,10 @@ export default function CouponManager() {
                             <span>{remainingText}</span>
                           </span>
                         )}
+                        <span className="flex items-center gap-1.5 text-zinc-400" title="Usos">
+                          <Users className="w-3.5 h-3.5 text-discord-purple" />
+                          <span>{coupon.usedCount ?? 0}/{coupon.maxUses ?? '∞'}</span>
+                        </span>
                       </div>
 
                       {/* Delete button */}
